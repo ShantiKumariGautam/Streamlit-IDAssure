@@ -5,11 +5,13 @@ import numpy as np
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import easyocr
 import re
-import fitz
+import fitz  # PyMuPDF
 
-
+# Models
 mtcnn = MTCNN(image_size=160, margin=20, device='cpu')
 resnet = InceptionResnetV1(pretrained='vggface2').eval().cpu()
+
+# -------------------------- Utility Functions -------------------------- #
 
 def extract_face_embedding(image: Image.Image):
     face = mtcnn(image)
@@ -33,7 +35,7 @@ def extract_image_from_pdf(pdf_file):
     return None
 
 def extract_dob_text(image: Image.Image):
-    reader = easyocr.Reader(['en'], gpu=False)  
+    reader = easyocr.Reader(['en'], gpu=False)
     results = reader.readtext(np.array(image))
     text = " ".join([item[1] for item in results])
     patterns = [
@@ -66,46 +68,87 @@ def parse_age_from_dob(dob_text):
             continue
     return None
 
+# -------------------------- UI & App Logic -------------------------- #
 
-st.title("IDAssure: Smart Identity Verification Portal ")
+st.set_page_config(page_title="IDAssure Verification", page_icon="🛡️", layout="centered")
 
-aadhar_file = st.file_uploader("Upload Aadhar (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
-selfie_file = st.camera_input("Take your selfie")
+st.markdown("""
+    <style>
+        .reportview-container {
+            padding-top: 2rem;
+        }
+        .stButton>button {
+            background-color: #0466c8;
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 0.6em 1.2em;
+        }
+        .stButton>button:hover {
+            background-color: #0353a4;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-if st.button("✅ Verify Identity"):
+st.markdown("### 🛡️ Welcome to **IDAssure**")
+st.markdown("#### ✅ Fast • Secure • Face + Document Verification")
+
+with st.expander("ℹ️ What does this do?", expanded=False):
+    st.markdown("""
+    This app allows you to:
+    - Upload your Aadhar (Image or PDF)
+    - Capture a live selfie
+    - Automatically detect DOB and estimate your age
+    - Check face similarity using deep learning
+
+    **Built using EasyOCR + FaceNet + Streamlit.**
+    """)
+
+# Upload and Capture
+st.markdown("### 📤 Upload your Aadhar Document")
+aadhar_file = st.file_uploader("", type=["jpg", "jpeg", "png", "pdf"])
+
+st.markdown("### 🤳 Capture a Selfie")
+selfie_file = st.camera_input("")
+
+if st.button("🔍 Verify Identity"):
     if not aadhar_file or not selfie_file:
-        st.warning("Please upload both Aadhar and Selfie")
+        st.warning("⚠️ Please upload both Aadhar and Selfie to continue.")
     else:
-        with st.spinner("Processing..."):
-            
+        with st.spinner("🔎 Verifying... Please wait..."):
             if aadhar_file.type == "application/pdf":
                 aadhar_img = extract_image_from_pdf(aadhar_file)
             else:
                 aadhar_img = Image.open(aadhar_file).convert("RGB")
 
-            
             selfie_img = Image.open(selfie_file).convert("RGB")
 
-            
             emb1 = extract_face_embedding(aadhar_img)
             emb2 = extract_face_embedding(selfie_img)
             score = compare_faces(emb1, emb2)
 
-            
             dob_text = extract_dob_text(aadhar_img)
             age = parse_age_from_dob(dob_text) if dob_text else None
 
-            
-            st.subheader("🔍 Results")
-            st.write(f"👤 Face Match: **{score*100:.2f}%**")
-            st.write(f"📅 DOB Text: **{dob_text if dob_text else 'Not found'}**")
-            st.write(f"🎂 Estimated Age: **{age if age else 'Not found'}**")
+            st.markdown("---")
+            st.subheader("🧾 Verification Results")
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.image(aadhar_img, caption="Aadhar Image", use_column_width=True)
+            with col2:
+                st.image(selfie_img, caption="Captured Selfie", use_column_width=True)
+
+            st.write(f"👤 **Face Match:** `{score*100:.2f}%`")
+            st.write(f"📅 **DOB Extracted:** `{dob_text if dob_text else 'Not Found'}`")
+            st.write(f"🎂 **Estimated Age:** `{age if age else 'Not Found'}`")
 
             if score > 0.75 and age and age >= 18:
-                st.success("✅ Identity and Age Verified")
+                st.success("✅ Identity & Age Verified")
             elif score > 0.75:
-                st.warning("⚠ Identity Verified, Age < 18")
+                st.warning("✅ Identity Verified, but Age < 18")
             elif score > 0.5:
-                st.warning("⚠ Face match is low")
+                st.warning("⚠ Face match is low. Verification uncertain.")
             else:
                 st.error("❌ Verification Failed")
+
