@@ -5,9 +5,9 @@ import numpy as np
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import easyocr
 import re
-import fitz  # PyMuPDF
+import fitz  
 
-# Initialize face detection and recognition (CPU only)
+
 mtcnn = MTCNN(image_size=160, margin=20, device='cpu')
 resnet = InceptionResnetV1(pretrained='vggface2').eval().cpu()
 
@@ -33,7 +33,7 @@ def extract_image_from_pdf(pdf_file):
     return None
 
 def extract_dob_text(image: Image.Image):
-    reader = easyocr.Reader(['en'], gpu=False)  # ✅ Moved inside
+    reader = easyocr.Reader(['en'], gpu=False)  
     results = reader.readtext(np.array(image))
     text = " ".join([item[1] for item in results])
     patterns = [
@@ -66,8 +66,8 @@ def parse_age_from_dob(dob_text):
             continue
     return None
 
-# Streamlit UI
-st.title("🧾 Aadhar + Face Verification")
+
+st.title("IDAssure: Smart Identity Verification Portal ")
 
 aadhar_file = st.file_uploader("Upload Aadhar (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
 selfie_file = st.camera_input("Take your selfie")
@@ -77,25 +77,25 @@ if st.button("✅ Verify Identity"):
         st.warning("Please upload both Aadhar and Selfie")
     else:
         with st.spinner("Processing..."):
-            # Read Aadhar
+            
             if aadhar_file.type == "application/pdf":
                 aadhar_img = extract_image_from_pdf(aadhar_file)
             else:
                 aadhar_img = Image.open(aadhar_file).convert("RGB")
 
-            # Read Selfie
+            
             selfie_img = Image.open(selfie_file).convert("RGB")
 
-            # Face Embeddings
+            
             emb1 = extract_face_embedding(aadhar_img)
             emb2 = extract_face_embedding(selfie_img)
             score = compare_faces(emb1, emb2)
 
-            # DOB & Age
+            
             dob_text = extract_dob_text(aadhar_img)
             age = parse_age_from_dob(dob_text) if dob_text else None
 
-            # Results
+            
             st.subheader("🔍 Results")
             st.write(f"👤 Face Match: **{score*100:.2f}%**")
             st.write(f"📅 DOB Text: **{dob_text if dob_text else 'Not found'}**")
