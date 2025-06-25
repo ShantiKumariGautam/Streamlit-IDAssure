@@ -5,7 +5,7 @@ import numpy as np
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import easyocr
 import re
-import fitz  
+import fitz
 
 
 mtcnn = MTCNN(image_size=160, margin=20, device='cpu')
