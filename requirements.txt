@@ -6,3 +6,7 @@ easyocr
 facenet-pytorch
 torch
 torchvision
+PyMuPDF
+scikit-image
+python-bidi
+PyYAML
