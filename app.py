@@ -2,21 +2,27 @@ import streamlit as st
 from PIL import Image
 from datetime import datetime
 import numpy as np
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from facenet_pytorch.models.mtcnn import MTCNN
+from facenet_pytorch.models.inception_resnet_v1 import InceptionResnetV1
 import easyocr
 import re
 import fitz  
 
 
+# Load models
 mtcnn = MTCNN(image_size=160, margin=20, device='cpu')
 resnet = InceptionResnetV1(pretrained='vggface2').eval().cpu()
 
+
+# Extract face embedding from image
 def extract_face_embedding(image: Image.Image):
     face = mtcnn(image)
     if face is not None:
         return resnet(face.unsqueeze(0)).detach().numpy().flatten()
     return None
 
+
+# Compare face embeddings (cosine similarity)
 def compare_faces(emb1, emb2):
     if emb1 is None or emb2 is None:
         return 0.0
@@ -24,6 +30,8 @@ def compare_faces(emb1, emb2):
     emb2 = emb2 / np.linalg.norm(emb2)
     return float(np.dot(emb1, emb2))
 
+
+# Extract image from uploaded PDF
 def extract_image_from_pdf(pdf_file):
     doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
     for page in doc:
@@ -32,6 +40,8 @@ def extract_image_from_pdf(pdf_file):
         return img
     return None
 
+
+# Extract DOB text using OCR
 def extract_dob_text(image: Image.Image):
     reader = easyocr.Reader(['en'], gpu=False)  
     results = reader.readtext(np.array(image))
@@ -52,6 +62,8 @@ def extract_dob_text(image: Image.Image):
             return match.group(0)
     return None
 
+
+# Parse age from DOB string
 def parse_age_from_dob(dob_text):
     formats = [
         "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%d %B %Y", "%d %b %Y", "%d%m%Y",
@@ -67,6 +79,7 @@ def parse_age_from_dob(dob_text):
     return None
 
 
+# Streamlit UI
 st.title("IDAssure: Smart Identity Verification Portal ")
 
 aadhar_file = st.file_uploader("Upload Aadhar (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
@@ -77,25 +90,20 @@ if st.button("✅ Verify Identity"):
         st.warning("Please upload both Aadhar and Selfie")
     else:
         with st.spinner("Processing..."):
-            
             if aadhar_file.type == "application/pdf":
                 aadhar_img = extract_image_from_pdf(aadhar_file)
             else:
                 aadhar_img = Image.open(aadhar_file).convert("RGB")
 
-            
             selfie_img = Image.open(selfie_file).convert("RGB")
 
-            
             emb1 = extract_face_embedding(aadhar_img)
             emb2 = extract_face_embedding(selfie_img)
             score = compare_faces(emb1, emb2)
 
-            
             dob_text = extract_dob_text(aadhar_img)
             age = parse_age_from_dob(dob_text) if dob_text else None
 
-            
             st.subheader("🔍 Results")
             st.write(f"👤 Face Match: *{score*100:.2f}%*")
             st.write(f"📅 DOB Text: *{dob_text if dob_text else 'Not found'}*")
