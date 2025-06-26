@@ -7,11 +7,26 @@ import easyocr
 import re
 import fitz  # PyMuPDF
 
-reader = easyocr.Reader(['en'])
+# 🔁 Auto-refresh every 9 minutes to avoid idle timeout
+st.markdown("<meta http-equiv='refresh' content='540'>", unsafe_allow_html=True)
 
-mtcnn = MTCNN(image_size=160, margin=20)
-resnet = InceptionResnetV1(pretrained='vggface2').eval()
+# ✅ Cached OCR reader
+@st.cache_resource
+def get_ocr_reader():
+    return easyocr.Reader(['en'])
 
+reader = get_ocr_reader()
+
+# ✅ Cached face models
+@st.cache_resource
+def load_face_models():
+    mtcnn = MTCNN(image_size=160, margin=20)
+    resnet = InceptionResnetV1(pretrained='vggface2').eval()
+    return mtcnn, resnet
+
+mtcnn, resnet = load_face_models()
+
+# ✅ Face embedding (not cached since it depends on image input)
 def extract_face_embedding(image: Image.Image):
     face = mtcnn(image)
     if face is not None:
@@ -25,8 +40,10 @@ def compare_faces(emb1, emb2):
     emb2 = emb2 / np.linalg.norm(emb2)
     return float(np.dot(emb1, emb2))
 
-def extract_image_from_pdf(pdf_file):
-    doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
+# ✅ Cached PDF-to-image
+@st.cache_data
+def extract_image_from_pdf(pdf_bytes):
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     for page in doc:
         pix = page.get_pixmap()
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
@@ -66,7 +83,9 @@ def parse_age_from_dob(dob_text):
             continue
     return None
 
-st.title("Aadhar + Face Verification")
+# ---------------- Streamlit UI ----------------
+
+st.title("IDAssure : Smart Identity Verification Portal")
 
 aadhar_file = st.file_uploader("Upload Aadhar (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
 selfie_file = st.camera_input("Take your selfie")
@@ -77,7 +96,7 @@ if st.button("Verify Identity"):
     else:
         with st.spinner("Processing..."):
             if aadhar_file.type == "application/pdf":
-                aadhar_img = extract_image_from_pdf(aadhar_file)
+                aadhar_img = extract_image_from_pdf(aadhar_file.getvalue())
             else:
                 aadhar_img = Image.open(aadhar_file).convert("RGB")
 
