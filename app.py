@@ -5,19 +5,16 @@ import numpy as np
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import easyocr
 import re
-import fitz  # PyMuPDF
+import fitz
 
-# 🔁 Auto-refresh every 9 minutes to avoid idle timeout
 st.markdown("<meta http-equiv='refresh' content='540'>", unsafe_allow_html=True)
 
-# ✅ Cached OCR reader
 @st.cache_resource
 def get_ocr_reader():
     return easyocr.Reader(['en'])
 
 reader = get_ocr_reader()
 
-# ✅ Cached face models
 @st.cache_resource
 def load_face_models():
     mtcnn = MTCNN(image_size=160, margin=20)
@@ -26,7 +23,6 @@ def load_face_models():
 
 mtcnn, resnet = load_face_models()
 
-# ✅ Face embedding (not cached since it depends on image input)
 def extract_face_embedding(image: Image.Image):
     face = mtcnn(image)
     if face is not None:
@@ -40,7 +36,6 @@ def compare_faces(emb1, emb2):
     emb2 = emb2 / np.linalg.norm(emb2)
     return float(np.dot(emb1, emb2))
 
-# ✅ Cached PDF-to-image
 @st.cache_data
 def extract_image_from_pdf(pdf_bytes):
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
@@ -83,12 +78,18 @@ def parse_age_from_dob(dob_text):
             continue
     return None
 
-# ---------------- Streamlit UI ----------------
-
 st.title("IDAssure : Smart Identity Verification Portal")
 
 aadhar_file = st.file_uploader("Upload Aadhar (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
 selfie_file = st.camera_input("Take your selfie")
+
+with st.expander(" Selfie Guidelines"):
+    st.markdown("""
+    - 🔆 **Take selfie in a well-lit area**  
+    - 👁️ **Keep your eyes open and look at the camera**  
+    - 😊 **Face should be fully visible (no masks or sunglasses)**  
+    - 📱 **Hold the camera steady to avoid blur**
+    """)
 
 if st.button("Verify Identity"):
     if not aadhar_file or not selfie_file:
@@ -121,4 +122,4 @@ if st.button("Verify Identity"):
             elif score > 0.5:
                 st.warning("Face match is low")
             else:
-                st.error("Verification Failed")
+                st.error("Verification Failed try again later")
