@@ -7,6 +7,7 @@ import easyocr
 import re
 import fitz
 
+st.set_page_config(page_title="IDAssure", layout="centered")
 st.markdown("<meta http-equiv='refresh' content='540'>", unsafe_allow_html=True)
 
 @st.cache_resource
@@ -83,7 +84,7 @@ st.title("IDAssure : Smart Identity Verification Portal")
 aadhar_file = st.file_uploader("Upload Aadhar (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
 selfie_file = st.camera_input("Take your selfie")
 
-with st.expander(" Selfie Guidelines"):
+with st.expander("📸 Selfie Guidelines"):
     st.markdown("""
     - 🔆 **Take selfie in a well-lit area**  
     - 👁️ **Keep your eyes open and look at the camera**  
@@ -91,7 +92,33 @@ with st.expander(" Selfie Guidelines"):
     - 📱 **Hold the camera steady to avoid blur**
     """)
 
-if st.button("Verify Identity"):
+st.markdown("""
+    <style>
+    .centered-button {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 0.6em 2em;
+        border-radius: 10px;
+        transition: background-color 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #45a049;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    submit = st.button("Verify Identity")
+
+if submit:
     if not aadhar_file or not selfie_file:
         st.warning("Please upload both Aadhar and Selfie")
     else:
@@ -122,4 +149,4 @@ if st.button("Verify Identity"):
             elif score > 0.5:
                 st.warning("Face match is low")
             else:
-                st.error("Verification Failed try again later")
+                st.error("Verification Failed")
