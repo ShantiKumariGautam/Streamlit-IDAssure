@@ -1,4 +1,3 @@
-
 import streamlit as st
 from PIL import Image
 from datetime import datetime
@@ -18,7 +17,6 @@ st.markdown("""
         justify-content: center;
         margin-top: 20px;
     }
-
     .stButton>button {
         background-color: #4CAF50;
         color: white;
@@ -29,7 +27,6 @@ st.markdown("""
         border: 2px solid transparent;
         transition: all 0.3s ease;
     }
-
     .stButton>button:hover {
         border-color: #4CAF50;
         background-color:#4CAF50;
@@ -81,7 +78,6 @@ def extract_dob_text(image: Image.Image):
         r"\b\d{2}[/-]\d{2}[/-]\d{2}\b",
         r"\b\d{2}\s+\w+\s+\d{4}\b",
         r"\b\d{1,2}[ ]?[A-Za-z]{3,9}[ ]?\d{4}\b",
-        r"\b\d{4}\b",
         r"DOB[:\s\-]*([0-9]{2}[/-][0-9]{2}[/-][0-9]{4})",
         r"Date of Birth[:\s\-]*([0-9]{2}[/-][0-9]{2}[/-][0-9]{4})",
         r"Birth[:\s\-]*([0-9]{2}[/-][0-9]{2}[/-][0-9]{4})"
@@ -108,7 +104,7 @@ def parse_age_from_dob(dob_text):
 
 st.title("IDAssure : Smart Identity Verification Portal")
 
-aadhar_file = st.file_uploader("Upload Aadhar (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
+aadhar_file = st.file_uploader("Upload Identity Card (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
 selfie_file = st.camera_input("Take your selfie")
 
 with st.expander("Selfie Guidelines"):
@@ -128,34 +124,43 @@ if submit:
         st.warning("Please upload both Identity Card and Selfie")
     else:
         with st.spinner("Processing..."):
+            # Load ID image
             if aadhar_file.type == "application/pdf":
                 aadhar_img = extract_image_from_pdf(aadhar_file.getvalue())
             else:
                 aadhar_img = Image.open(aadhar_file).convert("RGB")
-
             selfie_img = Image.open(selfie_file).convert("RGB")
 
+            # Face embeddings
             emb1 = extract_face_embedding(aadhar_img)
             emb2 = extract_face_embedding(selfie_img)
-            score = compare_faces(emb1, emb2)
 
-            dob_text = extract_dob_text(aadhar_img)
-            age = parse_age_from_dob(dob_text) if dob_text else None
-
-            st.subheader("Results")
-            st.write(f"Face Match: {score*100:.2f}%")
-            st.write(f"DOB Text: {dob_text if dob_text else 'Not found'}")
-            st.write(f"Estimated Age: {age if age else 'Not found'}")
-
-            if not dob_text:
-                st.warning("DOB not found in the uploaded Identity Card.")
-                
-            if score > 0.70 and age and age >= 18:
-                st.success("Identity and Age Verified")
-            elif score > 0.70:
-                st.warning("Identity Verified, Age < 18")
-            elif score > 0.5:
-                st.warning("Face match is low")
+            if emb1 is None or emb2 is None:
+                st.error("❌ Face not detected properly in one or both images.")
             else:
-                st.error("Verification Failed try again later")
+                score = compare_faces(emb1, emb2)
 
+                # DOB + Age
+                dob_text = extract_dob_text(aadhar_img)
+                age = parse_age_from_dob(dob_text) if dob_text else None
+
+                # Output
+                st.subheader("Results")
+                st.write(f"Face Match: {score*100:.2f}%")
+                st.write(f"DOB Text: {dob_text if dob_text else 'Not found'}")
+                st.write(f"Estimated Age: {age if age else 'Not found'}")
+
+                if not dob_text:
+                    st.warning("DOB not found in the uploaded Identity Card.")
+
+                # Final Decision
+                if score > 0.70 and age and age >= 18:
+                    st.success("✅ Identity and Age Verified")
+                elif score > 0.70 and age is not None:
+                    st.warning("Identity Verified, Age < 18")
+                elif score > 0.70 and age is None:
+                    st.warning("Face Matched, but DOB not found – Cannot verify age")
+                elif score > 0.5:
+                    st.warning("⚠️ Face match is low")
+                else:
+                    st.error("❌ Verification Failed. Try again with clearer images.")
