@@ -19,7 +19,7 @@ st.markdown("""
     }
 
     .stButton>button {
-        background-color: #0066cc;
+        background-color: #4CAF50;
         color: white;
         font-size: 18px;
         font-weight: bold;
@@ -31,7 +31,7 @@ st.markdown("""
 
     .stButton>button:hover {
         border-color: #3399ff;
-        background-color: #005bb5;
+        background-color:#3399ff;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -110,7 +110,7 @@ st.title("IDAssure : Smart Identity Verification Portal")
 aadhar_file = st.file_uploader("Upload Aadhar (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
 selfie_file = st.camera_input("Take your selfie")
 
-with st.expander("📸 Selfie Guidelines"):
+with st.expander("Selfie Guidelines"):
     st.markdown("""
     - 🔆 **Take selfie in a well-lit area**  
     - 👁️ **Keep your eyes open and look at the camera**  
