@@ -19,7 +19,7 @@ st.markdown("""
     }
 
     .stButton>button {
-        background-color: #4CAF50;
+        background-color: #0066cc;
         color: white;
         font-size: 18px;
         font-weight: bold;
@@ -30,16 +30,8 @@ st.markdown("""
     }
 
     .stButton>button:hover {
-        border-color: #4CAF50;
-        background-color: #3e8e41;
-    }
-
-    .result-card {
-        background-color: #1e1e1e;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 0 12px rgba(0,255,100,0.15);
-        margin-top: 2rem;
+        border-color: #3399ff;
+        background-color: #005bb5;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -149,12 +141,10 @@ if submit:
             dob_text = extract_dob_text(aadhar_img)
             age = parse_age_from_dob(dob_text) if dob_text else None
 
-            st.markdown('<div class="result-card">', unsafe_allow_html=True)
             st.subheader("Results")
-            st.write(f"**Face Match:** {score*100:.2f}%")
-            st.write(f"**DOB Text:** {dob_text if dob_text else 'Not found'}")
-            st.write(f"**Estimated Age:** {age if age else 'Not found'}")
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.write(f"Face Match: {score*100:.2f}%")
+            st.write(f"DOB Text: {dob_text if dob_text else 'Not found'}")
+            st.write(f"Estimated Age: {age if age else 'Not found'}")
 
             if score > 0.75 and age and age >= 18:
                 st.success("Identity and Age Verified")
