@@ -1,3 +1,4 @@
+
 import streamlit as st
 from PIL import Image
 from datetime import datetime
@@ -25,17 +26,13 @@ st.markdown("""
         font-weight: bold;
         padding: 0.6em 2em;
         border-radius: 10px;
-        border: none;
+        border: 2px solid transparent;
         transition: all 0.3s ease;
     }
 
     .stButton>button:hover {
-        background-color: #388E3C;
-    }
-
-    .stButton>button:focus {
-        outline: none;
-        box-shadow: none;
+        border-color: #4CAF50;
+        background-color:#4CAF50;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -123,12 +120,10 @@ with st.expander("Selfie Guidelines"):
     """)
 
 st.markdown('<div class="center-button">', unsafe_allow_html=True)
-submit = st.button("Verify Identity", key="verify_button")
+submit = st.button("Verify Identity")
 st.markdown('</div>', unsafe_allow_html=True)
 
 if submit:
-    st.markdown('<div class="center-button"><button disabled style="background-color: #388E3C; color: white; font-size: 18px; font-weight: bold; padding: 0.6em 2em; border-radius: 10px; border: none;">Matching Identity...</button></div>', unsafe_allow_html=True)
-
     if not aadhar_file or not selfie_file:
         st.warning("Please upload both Aadhar and Selfie")
     else:
