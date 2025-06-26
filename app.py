@@ -142,16 +142,19 @@ if submit:
             dob_text = extract_dob_text(aadhar_img)
             age = parse_age_from_dob(dob_text) if dob_text else None
 
-            st.subheader("Results")
+                       st.subheader("Results")
             st.write(f"Face Match: {score*100:.2f}%")
             st.write(f"DOB Text: {dob_text if dob_text else 'Not found'}")
             st.write(f"Estimated Age: {age if age else 'Not found'}")
 
-            if score > 0.70 and age and age >= 18:
-                st.success("Identity and Age Verified")
-            elif score > 0.70:
-                st.warning("Identity Verified, Age < 18")
+            if score > 0.75 and age and age >= 18:
+                st.success("✅ Identity and Age Verified")
+            elif score > 0.75 and age is not None:
+                st.warning("Identity Verified, but Age < 18")
+            elif score > 0.75 and age is None:
+                st.warning("Face Matched, but DOB not found – Cannot verify age")
             elif score > 0.5:
-                st.warning("Face match is low")
+                st.warning("⚠️ Face match is low")
             else:
-                st.error("Verification Failed")
+                st.error("❌ Verification Failed")
+
