@@ -147,9 +147,9 @@ if submit:
             st.write(f"DOB Text: {dob_text if dob_text else 'Not found'}")
             st.write(f"Estimated Age: {age if age else 'Not found'}")
 
-            if score > 0.75 and age and age >= 18:
+            if score > 0.70 and age and age >= 18:
                 st.success("Identity and Age Verified")
-            elif score > 0.75:
+            elif score > 0.70:
                 st.warning("Identity Verified, Age < 18")
             elif score > 0.5:
                 st.warning("Face match is low")
