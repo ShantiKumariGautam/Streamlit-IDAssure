@@ -25,13 +25,17 @@ st.markdown("""
         font-weight: bold;
         padding: 0.6em 2em;
         border-radius: 10px;
-        border: 2px solid transparent;
+        border: none;
         transition: all 0.3s ease;
     }
 
     .stButton>button:hover {
-        border-color: #3399ff;
-        background-color:#3399ff;
+        background-color: #388E3C;
+    }
+
+    .stButton>button:focus {
+        outline: none;
+        box-shadow: none;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -119,10 +123,12 @@ with st.expander("Selfie Guidelines"):
     """)
 
 st.markdown('<div class="center-button">', unsafe_allow_html=True)
-submit = st.button("Verify Identity")
+submit = st.button("Verify Identity", key="verify_button")
 st.markdown('</div>', unsafe_allow_html=True)
 
 if submit:
+    st.markdown('<div class="center-button"><button disabled style="background-color: #388E3C; color: white; font-size: 18px; font-weight: bold; padding: 0.6em 2em; border-radius: 10px; border: none;">Matching Identity...</button></div>', unsafe_allow_html=True)
+
     if not aadhar_file or not selfie_file:
         st.warning("Please upload both Aadhar and Selfie")
     else:
