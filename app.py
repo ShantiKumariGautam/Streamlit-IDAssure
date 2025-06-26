@@ -125,7 +125,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 if submit:
     if not aadhar_file or not selfie_file:
-        st.warning("Please upload both Aadhar and Selfie")
+        st.warning("Please upload both Identity Card and Selfie")
     else:
         with st.spinner("Processing..."):
             if aadhar_file.type == "application/pdf":
@@ -147,6 +147,9 @@ if submit:
             st.write(f"DOB Text: {dob_text if dob_text else 'Not found'}")
             st.write(f"Estimated Age: {age if age else 'Not found'}")
 
+            if not dob_text:
+                st.warning("DOB not found in the uploaded Identity Card.")
+                
             if score > 0.70 and age and age >= 18:
                 st.success("Identity and Age Verified")
             elif score > 0.70:
