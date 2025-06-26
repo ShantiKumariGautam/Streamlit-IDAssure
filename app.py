@@ -10,6 +10,40 @@ import fitz
 st.set_page_config(page_title="IDAssure", layout="centered")
 st.markdown("<meta http-equiv='refresh' content='540'>", unsafe_allow_html=True)
 
+st.markdown("""
+    <style>
+    .center-button {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 0.6em 2em;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .stButton>button:hover {
+        border-color: #4CAF50;
+        background-color: #3e8e41;
+    }
+
+    .result-card {
+        background-color: #1e1e1e;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 0 12px rgba(0,255,100,0.15);
+        margin-top: 2rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 @st.cache_resource
 def get_ocr_reader():
     return easyocr.Reader(['en'])
@@ -92,31 +126,9 @@ with st.expander("📸 Selfie Guidelines"):
     - 📱 **Hold the camera steady to avoid blur**
     """)
 
-st.markdown("""
-    <style>
-    .centered-button {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-    }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        font-size: 18px;
-        font-weight: bold;
-        padding: 0.6em 2em;
-        border-radius: 10px;
-        transition: background-color 0.3s;
-    }
-    .stButton>button:hover {
-        background-color: #45a049;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    submit = st.button("Verify Identity")
+st.markdown('<div class="center-button">', unsafe_allow_html=True)
+submit = st.button("Verify Identity")
+st.markdown('</div>', unsafe_allow_html=True)
 
 if submit:
     if not aadhar_file or not selfie_file:
@@ -137,10 +149,12 @@ if submit:
             dob_text = extract_dob_text(aadhar_img)
             age = parse_age_from_dob(dob_text) if dob_text else None
 
+            st.markdown('<div class="result-card">', unsafe_allow_html=True)
             st.subheader("Results")
-            st.write(f"Face Match: {score*100:.2f}%")
-            st.write(f"DOB Text: {dob_text if dob_text else 'Not found'}")
-            st.write(f"Estimated Age: {age if age else 'Not found'}")
+            st.write(f"**Face Match:** {score*100:.2f}%")
+            st.write(f"**DOB Text:** {dob_text if dob_text else 'Not found'}")
+            st.write(f"**Estimated Age:** {age if age else 'Not found'}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
             if score > 0.75 and age and age >= 18:
                 st.success("Identity and Age Verified")
